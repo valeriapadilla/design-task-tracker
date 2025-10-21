@@ -130,13 +130,14 @@ export function DesignerProjectTable({
                   </td>
 
                   {/* Acción */}
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                     {availableStatuses.length > 0 ? (
                       <select
                         onChange={(e) => {
                           e.stopPropagation()
                           handleStatusChange(project.id, e.target.value)
                         }}
+                        onClick={(e) => e.stopPropagation()}
                         disabled={loadingProjectId === project.id}
                         className="text-sm border border-gray-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:opacity-50"
                         value=""
