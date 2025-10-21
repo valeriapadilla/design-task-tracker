@@ -135,6 +135,28 @@ export function useAdminProjects() {
     }
   }
 
+  const updateStatus = async (projectId: string, status: string) => {
+    try {
+      const response = await fetch(`/api/projects/${projectId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Error al actualizar estado')
+      }
+
+      // Recargar proyectos
+      await fetchProjects({ page: 1, pageSize: 50 })
+    } catch (error) {
+      console.error('Error updating status:', error)
+      throw error
+    }
+  }
+
   return {
     projects,
     loading,
@@ -143,6 +165,7 @@ export function useAdminProjects() {
     updateProject,
     assignDesigner,
     approveProject,
-    rejectProject
+    rejectProject,
+    updateStatus
   }
 }

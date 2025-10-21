@@ -24,12 +24,16 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     await requireAnyRole([USER_ROLES.ADMIN, USER_ROLES.MARCA])
     
     const body = await request.json()
+    console.log('Update project body received:', body)
+    
     const updates = UpdateProjectSchema.parse(body)
+    console.log('Parsed updates:', updates)
     
     const { id } = await params
     const project = await projectService.update(id, updates)
     return ok(project)
   } catch (error) {
+    console.error('Update project error:', error)
     return badRequest('Error al actualizar proyecto', error)
   }
 }

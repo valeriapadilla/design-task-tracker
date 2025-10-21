@@ -1,12 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Project } from '@/lib/types'
-
-interface Designer {
-  id: string
-  full_name: string
-}
+import { useDesigners } from '@/hooks/useDesigners'
 
 interface AssignDesignerModalProps {
   isOpen: boolean
@@ -21,31 +17,9 @@ export function AssignDesignerModal({
   onAssignDesigner, 
   project 
 }: AssignDesignerModalProps) {
-  const [designers, setDesigners] = useState<Designer[]>([])
   const [selectedDesignerId, setSelectedDesignerId] = useState('')
   const [loading, setLoading] = useState(false)
-  const [loadingDesigners, setLoadingDesigners] = useState(false)
-
-  useEffect(() => {
-    if (isOpen) {
-      fetchDesigners()
-    }
-  }, [isOpen])
-
-  const fetchDesigners = async () => {
-    setLoadingDesigners(true)
-    try {
-      const response = await fetch('/api/auth/designers')
-      if (response.ok) {
-        const data = await response.json()
-        setDesigners(data.data || [])
-      }
-    } catch (error) {
-      console.error('Error fetching designers:', error)
-    } finally {
-      setLoadingDesigners(false)
-    }
-  }
+  const { designers, loading: loadingDesigners } = useDesigners()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

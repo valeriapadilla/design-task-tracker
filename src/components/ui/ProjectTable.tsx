@@ -2,33 +2,18 @@
 
 import { useState } from 'react'
 import { Project } from '@/lib/types'
-import { PROJECT_STATUS } from '@/lib/utils/constants'
+import { PROJECT_STATUS_LABELS, PROJECT_STATUS_COLORS } from '@/lib/utils/constants'
+import { useDesigners } from '@/hooks/useDesigners'
 
 interface ProjectTableProps {
   projects: Project[]
   onProjectSelect: (project: Project) => void
 }
 
-const statusColors = {
-  [PROJECT_STATUS.CREADO]: 'bg-gray-100 text-gray-800',
-  [PROJECT_STATUS.ASIGNADO]: 'bg-blue-100 text-blue-800',
-  [PROJECT_STATUS.EN_PROGRESO]: 'bg-yellow-100 text-yellow-800',
-  [PROJECT_STATUS.ENTREGADO]: 'bg-purple-100 text-purple-800',
-  [PROJECT_STATUS.APROBADO]: 'bg-green-100 text-green-800',
-  [PROJECT_STATUS.RECHAZADO]: 'bg-red-100 text-red-800'
-}
-
-const statusLabels = {
-  [PROJECT_STATUS.CREADO]: 'Creado',
-  [PROJECT_STATUS.ASIGNADO]: 'Asignado',
-  [PROJECT_STATUS.EN_PROGRESO]: 'En Progreso',
-  [PROJECT_STATUS.ENTREGADO]: 'Entregado',
-  [PROJECT_STATUS.APROBADO]: 'Aprobado',
-  [PROJECT_STATUS.RECHAZADO]: 'Rechazado'
-}
 
 export function ProjectTable({ projects, onProjectSelect }: ProjectTableProps) {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
+  const { getDesignerName } = useDesigners()
 
   const handleProjectClick = (project: Project) => {
     setSelectedProject(project)
@@ -124,10 +109,10 @@ export function ProjectTable({ projects, onProjectSelect }: ProjectTableProps) {
                       <div className="flex items-center space-x-2">
                         <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
                           <span className="text-xs font-medium text-gray-600">
-                            {project.designer_id.charAt(0).toUpperCase()}
+                            {getDesignerName(project.designer_id).charAt(0).toUpperCase()}
                           </span>
                         </div>
-                        <span className="text-sm text-gray-600">Diseñador</span>
+                        <span className="text-sm text-gray-600">{getDesignerName(project.designer_id)}</span>
                       </div>
                     ) : (
                       <span className="text-sm text-gray-400">No asignado</span>
@@ -137,8 +122,8 @@ export function ProjectTable({ projects, onProjectSelect }: ProjectTableProps) {
 
                 {/* Estado */}
                 <td className="px-6 py-4">
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusColors[project.status]}`}>
-                    {statusLabels[project.status]}
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${PROJECT_STATUS_COLORS[project.status]}`}>
+                    {PROJECT_STATUS_LABELS[project.status]}
                   </span>
                 </td>
               </tr>

@@ -19,6 +19,7 @@ export function AdminDashboard() {
   const [editProject, setEditProject] = useState<Project | null>(null)
   const [assignProject, setAssignProject] = useState<Project | null>(null)
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all')
+  const [isSigningOut, setIsSigningOut] = useState(false)
 
   const { 
     projects, 
@@ -28,7 +29,8 @@ export function AdminDashboard() {
     updateProject,
     assignDesigner,
     approveProject,
-    rejectProject
+    rejectProject,
+    updateStatus
   } = useAdminProjects()
 
   // Configurar filtros para la API
@@ -61,7 +63,7 @@ export function AdminDashboard() {
   }
 
   useEffect(() => {
-    if (!loading) {
+    if (!loading && !isSigningOut) {
       if (!user) {
         router.push('/login')
         return
@@ -71,7 +73,7 @@ export function AdminDashboard() {
         return
       }
     }
-  }, [loading, user, router])
+  }, [loading, user, router, isSigningOut])
 
   // Cargar proyectos inicialmente
   useEffect(() => {
@@ -100,8 +102,9 @@ export function AdminDashboard() {
         userRole="Admin"
         userName={user?.full_name || ''}
         onSignOut={async () => {
+          setIsSigningOut(true)
           await signOut()
-          router.push('/')
+          router.replace('/')
         }}
       />
 
@@ -179,6 +182,9 @@ export function AdminDashboard() {
             onAssignDesigner={setAssignProject}
             onApproveProject={approveProject}
             onRejectProject={rejectProject}
+            onUpdateProject={updateProject}
+            onAssignDesignerToProject={assignDesigner}
+            onUpdateStatus={updateStatus}
           />
         )}
 

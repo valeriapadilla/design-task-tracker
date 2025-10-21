@@ -28,7 +28,6 @@ export const authService = {
     return authData
   },
 
-  // Iniciar sesión
   async signIn(email: string, password: string) {
     const supabase = await createClient()
     
@@ -74,12 +73,19 @@ export const authService = {
   async getDesigners(): Promise<Array<{ id: string, full_name: string }>> {
     const supabase = await createClient()
     
+    // Obtener diseñadores desde la tabla profiles 
     const { data, error } = await supabase
       .from('profiles')
       .select('id, full_name')
       .eq('role', 'diseñador')
     
     if (error) throw error
-    return data || []
+    
+    const designers = (data || []).map(profile => ({
+      id: profile.id,
+      full_name: profile.full_name || `Usuario ${profile.id.slice(0, 8)}`
+    }))
+    
+    return designers
   }
 }

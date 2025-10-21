@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { USER_ROLES } from '@/lib/utils/constants'
@@ -9,9 +9,10 @@ import { AdminDashboard } from '../../components/ui/AdminDashboard'
 export default function DashboardPage() {
   const { user, loading, isAuthenticated, needsRoleSelection, signOut } = useAuth()
   const router = useRouter()
+  const [isSigningOut, setIsSigningOut] = useState(false)
 
   useEffect(() => {
-    if (!loading) {
+    if (!loading && !isSigningOut) {
       if (!isAuthenticated) {
         router.push('/login')
       } else if (needsRoleSelection) {
@@ -26,7 +27,7 @@ export default function DashboardPage() {
         // Si es admin, se queda en el dashboard principal
       }
     }
-  }, [loading, isAuthenticated, needsRoleSelection, user?.role, router])
+  }, [loading, isAuthenticated, needsRoleSelection, user?.role, router, isSigningOut])
 
   if (loading) {
     return (
@@ -66,8 +67,9 @@ export default function DashboardPage() {
               </span>
               <button
                 onClick={async () => {
+                  setIsSigningOut(true)
                   await signOut()
-                  router.push('/')
+                  router.replace('/')
                 }}
                 className="px-4 py-2 text-coffee hover:text-redwood transition-colors"
               >

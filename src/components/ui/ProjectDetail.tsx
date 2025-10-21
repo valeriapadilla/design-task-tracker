@@ -1,33 +1,18 @@
 'use client'
 
-import { useState } from 'react'
 import { Project } from '@/lib/types'
-import { PROJECT_STATUS } from '@/lib/utils/constants'
+import { PROJECT_STATUS, PROJECT_STATUS_LABELS, PROJECT_STATUS_COLORS } from '@/lib/utils/constants'
+import { useDesigners } from '@/hooks/useDesigners'
 
 interface ProjectDetailProps {
   project: Project | null
   onClose: () => void
 }
 
-const statusColors = {
-  [PROJECT_STATUS.CREADO]: 'bg-gray-100 text-gray-800 border-gray-200',
-  [PROJECT_STATUS.ASIGNADO]: 'bg-blue-100 text-blue-800 border-blue-200',
-  [PROJECT_STATUS.EN_PROGRESO]: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  [PROJECT_STATUS.ENTREGADO]: 'bg-purple-100 text-purple-800 border-purple-200',
-  [PROJECT_STATUS.APROBADO]: 'bg-green-100 text-green-800 border-green-200',
-  [PROJECT_STATUS.RECHAZADO]: 'bg-red-100 text-red-800 border-red-200'
-}
-
-const statusLabels = {
-  [PROJECT_STATUS.CREADO]: 'Creado',
-  [PROJECT_STATUS.ASIGNADO]: 'Asignado',
-  [PROJECT_STATUS.EN_PROGRESO]: 'En Progreso',
-  [PROJECT_STATUS.ENTREGADO]: 'Entregado',
-  [PROJECT_STATUS.APROBADO]: 'Aprobado',
-  [PROJECT_STATUS.RECHAZADO]: 'Rechazado'
-}
 
 export function ProjectDetail({ project, onClose }: ProjectDetailProps) {
+  const { getDesignerName } = useDesigners()
+
   if (!project) return null
 
   const formatDate = (dateString: string) => {
@@ -61,8 +46,8 @@ export function ProjectDetail({ project, onClose }: ProjectDetailProps) {
               </div>
             </div>
             <div className="flex items-center space-x-3">
-              <span className={`px-3 py-1 text-sm font-semibold rounded-full border ${statusColors[project.status]}`}>
-                {statusLabels[project.status]}
+              <span className={`px-3 py-1 text-sm font-semibold rounded-full border ${PROJECT_STATUS_COLORS[project.status]}`}>
+                {PROJECT_STATUS_LABELS[project.status]}
               </span>
             </div>
           </div>
@@ -137,7 +122,7 @@ export function ProjectDetail({ project, onClose }: ProjectDetailProps) {
                   <div>
                     <label className="text-sm font-medium text-gray-500">Diseñador asignado</label>
                     <p className="text-sm text-gray-900">
-                      {project.designer_id ? project.designer_id : 'No asignado'}
+                      {project.designer_id ? getDesignerName(project.designer_id) : 'No asignado'}
                     </p>
                   </div>
                 </div>
@@ -159,7 +144,7 @@ export function ProjectDetail({ project, onClose }: ProjectDetailProps) {
                           ? 'text-gray-900 font-medium' 
                           : 'text-gray-500'
                       }`}>
-                        {statusLabels[status]}
+                        {PROJECT_STATUS_LABELS[status as keyof typeof PROJECT_STATUS_LABELS]}
                       </span>
                     </div>
                   ))}

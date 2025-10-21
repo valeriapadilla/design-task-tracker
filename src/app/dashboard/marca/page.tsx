@@ -18,6 +18,7 @@ export default function MarcaDashboard() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all')
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [isSigningOut, setIsSigningOut] = useState(false)
 
   const { projects, loading: projectsLoading, error: projectsError, fetchProjects, createProject } = useProjects()
 
@@ -58,7 +59,7 @@ export default function MarcaDashboard() {
   }
 
   useEffect(() => {
-    if (!loading) {
+    if (!loading && !isSigningOut) {
       if (!user) {
         router.push('/login')
         return
@@ -68,7 +69,7 @@ export default function MarcaDashboard() {
         return
       }
     }
-  }, [loading, user, router])
+  }, [loading, user, router, isSigningOut])
 
   // Cargar proyectos inicialmente
   useEffect(() => {
@@ -111,37 +112,13 @@ export default function MarcaDashboard() {
         }
 
         const filesData = await filesResponse.json()
+        console.log('Files response:', filesData)
         
         // Actualizar el proyecto con las URLs de los archivos
         const updateData = {
           files: filesData.data?.files || []
         }
-        console.log('Update data being sent:', updateData)
-        
-        // Debug: Probar validación primero
-        const debugResponse = await fetch('/api/debug', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(updateData),
-        })
-        
-        const debugResult = await debugResponse.json()
-        console.log('Debug validation result:', debugResult)
-        
-        if (!debugResponse.ok) {
-          throw new Error(`Validation failed: ${debugResult.message}`)
-        }
-        
-        // Verificar que el proyecto existe antes de actualizar
-        console.log('Verifying project exists before update...')
-        const verifyResponse = await fetch(`/api/projects/${project.id}`)
-        if (!verifyResponse.ok) {
-          throw new Error('Proyecto no encontrado para actualizar')
-        }
-        const verifyData = await verifyResponse.json()
-        console.log('Project verification:', verifyData)
+        console.log('Update data:', updateData)
         
         const updateResponse = await fetch(`/api/projects/${project.id}`, {
           method: 'PATCH',
@@ -188,8 +165,9 @@ export default function MarcaDashboard() {
         userRole="Marca"
         userName={user?.full_name || ''}
         onSignOut={async () => {
+          setIsSigningOut(true)
           await signOut()
-          router.push('/')
+          router.replace('/')
         }}
       />
 

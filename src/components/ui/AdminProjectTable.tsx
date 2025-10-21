@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { Project } from '@/lib/types'
-import { PROJECT_STATUS } from '@/lib/utils/constants'
+import { PROJECT_STATUS, PROJECT_STATUS_LABELS } from '@/lib/utils/constants'
+import { useDesigners } from '@/hooks/useDesigners'
 
 interface AdminProjectTableProps {
   projects: Project[]
@@ -11,25 +12,11 @@ interface AdminProjectTableProps {
   onAssignDesigner: (project: Project) => void
   onApproveProject: (projectId: string) => Promise<void>
   onRejectProject: (projectId: string) => Promise<void>
+  onUpdateProject: (projectId: string, data: { title: string; description: string; status: string }) => Promise<void>
+  onAssignDesignerToProject: (projectId: string, designerId: string) => Promise<void>
+  onUpdateStatus: (projectId: string, status: string) => Promise<void>
 }
 
-const statusColors = {
-  [PROJECT_STATUS.CREADO]: 'bg-gray-100 text-gray-800',
-  [PROJECT_STATUS.ASIGNADO]: 'bg-blue-100 text-blue-800',
-  [PROJECT_STATUS.EN_PROGRESO]: 'bg-yellow-100 text-yellow-800',
-  [PROJECT_STATUS.ENTREGADO]: 'bg-purple-100 text-purple-800',
-  [PROJECT_STATUS.APROBADO]: 'bg-green-100 text-green-800',
-  [PROJECT_STATUS.RECHAZADO]: 'bg-red-100 text-red-800'
-}
-
-const statusLabels = {
-  [PROJECT_STATUS.CREADO]: 'Creado',
-  [PROJECT_STATUS.ASIGNADO]: 'Asignado',
-  [PROJECT_STATUS.EN_PROGRESO]: 'En Progreso',
-  [PROJECT_STATUS.ENTREGADO]: 'Entregado',
-  [PROJECT_STATUS.APROBADO]: 'Aprobado',
-  [PROJECT_STATUS.RECHAZADO]: 'Rechazado'
-}
 
 export function AdminProjectTable({ 
   projects, 
@@ -37,9 +24,35 @@ export function AdminProjectTable({
   onEditProject, 
   onAssignDesigner,
   onApproveProject,
-  onRejectProject
+  onRejectProject,
+  onUpdateProject,
+  onAssignDesignerToProject,
+  onUpdateStatus
 }: AdminProjectTableProps) {
   const [loadingProjectId, setLoadingProjectId] = useState<string | null>(null)
+  const { designers } = useDesigners()
+
+  const handleStatusChange = async (projectId: string, newStatus: string) => {
+    setLoadingProjectId(projectId)
+    try {
+      await onUpdateStatus(projectId, newStatus)
+    } catch (error) {
+      console.error('Error updating status:', error)
+    } finally {
+      setLoadingProjectId(null)
+    }
+  }
+
+  const handleDesignerChange = async (projectId: string, designerId: string) => {
+    setLoadingProjectId(projectId)
+    try {
+      await onAssignDesignerToProject(projectId, designerId)
+    } catch (error) {
+      console.error('Error assigning designer:', error)
+    } finally {
+      setLoadingProjectId(null)
+    }
+  }
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-ES', {
@@ -49,26 +62,6 @@ export function AdminProjectTable({
     })
   }
 
-  const handleApprove = async (projectId: string) => {
-    setLoadingProjectId(projectId)
-    try {
-      await onApproveProject(projectId)
-    } finally {
-      setLoadingProjectId(null)
-    }
-  }
-
-  const handleReject = async (projectId: string) => {
-    setLoadingProjectId(projectId)
-    try {
-      await onRejectProject(projectId)
-    } finally {
-      setLoadingProjectId(null)
-    }
-  }
-
-  const canApprove = (status: string) => status === PROJECT_STATUS.ENTREGADO
-  const canReject = (status: string) => status === PROJECT_STATUS.ENTREGADO
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -99,9 +92,6 @@ export function AdminProjectTable({
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Estado
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Acciones
               </th>
             </tr>
           </thead>
@@ -148,77 +138,42 @@ export function AdminProjectTable({
 
                 {/* Diseñador */}
                 <td className="px-6 py-4">
-                  <div className="flex items-center">
-                    {project.designer_id ? (
-                      <div className="flex items-center space-x-2">
-                        <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                          <span className="text-xs font-medium text-gray-600">
-                            {project.designer_id.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <span className="text-sm text-gray-600">Diseñador</span>
-                      </div>
-                    ) : (
-                      <span className="text-sm text-gray-400">No asignado</span>
-                    )}
-                  </div>
+                  <select
+                    value={project.designer_id || ''}
+                    onChange={(e) => handleDesignerChange(project.id, e.target.value)}
+                    disabled={loadingProjectId === project.id}
+                    className="text-sm border border-gray-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:opacity-50"
+                  >
+                    <option value="">Sin asignar</option>
+                    {designers.map((designer) => (
+                      <option key={designer.id} value={designer.id}>
+                        {designer.full_name}
+                      </option>
+                    ))}
+                  </select>
                 </td>
 
                 {/* Estado */}
                 <td className="px-6 py-4">
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusColors[project.status]}`}>
-                    {statusLabels[project.status]}
-                  </span>
+                  <select
+                    value={project.status}
+                    onChange={(e) => handleStatusChange(project.id, e.target.value)}
+                    disabled={loadingProjectId === project.id}
+                    className="text-sm border border-gray-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:opacity-50"
+                  >
+                    <option value={PROJECT_STATUS.CREADO}>{PROJECT_STATUS_LABELS[PROJECT_STATUS.CREADO]}</option>
+                    <option value={PROJECT_STATUS.ASIGNADO}>{PROJECT_STATUS_LABELS[PROJECT_STATUS.ASIGNADO]}</option>
+                    <option value={PROJECT_STATUS.EN_PROGRESO}>{PROJECT_STATUS_LABELS[PROJECT_STATUS.EN_PROGRESO]}</option>
+                    <option value={PROJECT_STATUS.ENTREGADO}>{PROJECT_STATUS_LABELS[PROJECT_STATUS.ENTREGADO]}</option>
+                    <option value={PROJECT_STATUS.APROBADO}>{PROJECT_STATUS_LABELS[PROJECT_STATUS.APROBADO]}</option>
+                    <option value={PROJECT_STATUS.RECHAZADO}>{PROJECT_STATUS_LABELS[PROJECT_STATUS.RECHAZADO]}</option>
+                  </select>
                 </td>
 
-                {/* Acciones */}
-                <td className="px-6 py-4">
-                  <div className="flex items-center space-x-2">
-                    {/* Editar */}
-                    <button
-                      onClick={() => onEditProject(project)}
-                      className="text-coffee hover:text-coffee/80 text-sm font-medium"
-                    >
-                      Editar
-                    </button>
-                    
-                    {/* Asignar Diseñador */}
-                    {!project.designer_id && (
-                      <button
-                        onClick={() => onAssignDesigner(project)}
-                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                      >
-                        Asignar
-                      </button>
-                    )}
-
-                    {/* Aprobar */}
-                    {canApprove(project.status) && (
-                      <button
-                        onClick={() => handleApprove(project.id)}
-                        disabled={loadingProjectId === project.id}
-                        className="text-green-600 hover:text-green-800 text-sm font-medium disabled:opacity-50"
-                      >
-                        {loadingProjectId === project.id ? 'Aprobando...' : 'Aprobar'}
-                      </button>
-                    )}
-
-                    {/* Rechazar */}
-                    {canReject(project.status) && (
-                      <button
-                        onClick={() => handleReject(project.id)}
-                        disabled={loadingProjectId === project.id}
-                        className="text-red-600 hover:text-red-800 text-sm font-medium disabled:opacity-50"
-                      >
-                        {loadingProjectId === project.id ? 'Rechazando...' : 'Rechazar'}
-                      </button>
-                    )}
-                  </div>
-                </td>
               </tr>
             )) : (
               <tr>
-                <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
                   No hay datos disponibles
                 </td>
               </tr>
