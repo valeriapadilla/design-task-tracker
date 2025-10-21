@@ -31,7 +31,8 @@ export const CreateProjectSchema = z.object({
 export const UpdateProjectSchema = z.object({
   title: z.string().min(3).optional(),
   description: z.string().min(10).optional(),
-  designer_id: z.uuid({message: 'ID de diseñador inválido'}).optional()
+  designer_id: z.uuid({message: 'ID de diseñador inválido'}).optional(),
+  files: z.array(z.string()).optional()
 })
 
 // Asignar diseñador (solo admin)

@@ -1,13 +1,24 @@
+import { Header } from '@/components/ui/Header'
+import { Hero } from '@/components/ui/Hero'
+import { FeatureCard } from '@/components/ui/FeatureCard'
+import { 
+  BRAND_CONFIG, 
+  HERO_CONFIG, 
+  FEATURES_CONFIG, 
+  STYLES 
+} from '@/lib/constants/homePage'
+
 export default function HomePage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">
-          Design Task Tracker
-        </h1>
-        <p className="text-lg text-gray-600">
-          Backend API está funcionando correctamente
-        </p>
+    <div className={STYLES.background}>
+      <Header {...BRAND_CONFIG} />
+      
+      <Hero {...HERO_CONFIG} />
+
+      <div className={STYLES.featuresContainer}>
+        {FEATURES_CONFIG.map((feature, index) => (
+          <FeatureCard key={index} {...feature} />
+        ))}
       </div>
     </div>
   )

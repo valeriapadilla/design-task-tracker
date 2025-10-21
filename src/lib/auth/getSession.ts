@@ -1,5 +1,3 @@
-//obtener la sesión del usuario
-
 import {createClient} from '@/lib/supabase/server'
 import type { SessionUser } from '@/lib/types'
 import type { UserRole } from '@/lib/utils/constants'
@@ -12,21 +10,14 @@ export async function getSessionUser(): Promise<SessionUser | null>{
 
         if (authError || !user) return null
 
-        const role = user.app_metadata?.role as UserRole | null
-
-        const {data: profile, error: profileError} = await supabase
-            .from('profiles')
-            .select('full_name')
-            .eq('id', user.id)
-            .single()
-
-        if (profileError || !profile) return null
+        const role = user.user_metadata?.role as UserRole | null
+        const full_name = user.user_metadata?.full_name || null
 
         return {
             id: user.id,
             email: user.email!,
-            role,
-            full_name: profile.full_name,
+            role: role,
+            full_name: full_name,
         }   
     } catch(error){
         console.error('Error getting session user:', error)

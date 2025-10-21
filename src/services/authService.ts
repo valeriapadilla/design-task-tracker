@@ -54,14 +54,14 @@ export const authService = {
   async updateUserRole(userId: string, role: UserRole) {
     const supabase = await createClient()
     
-    // Actualizar app_metadata en auth.users
-    const { error: authError } = await supabase.auth.admin.updateUserById(userId, {
-      app_metadata: { role }
+    // Actualizar user_metadata del usuario actual (fuente de verdad)
+    const { error: authError } = await supabase.auth.updateUser({
+      data: { role }
     })
     
     if (authError) throw authError
     
-    // Actualizar profiles
+    // También actualizar profiles para consistencia
     const { error: profileError } = await supabase
       .from('profiles')
       .update({ role })

@@ -14,8 +14,8 @@ export async function GET(request: NextRequest) {
     const filters = ProjectQuerySchema.parse({
       page: searchParams.get('page'),
       pageSize: searchParams.get('pageSize'),
-      status: searchParams.get('status'),
-      search: searchParams.get('search')
+      status: searchParams.get('status') || undefined,
+      search: searchParams.get('search') || undefined
     })
     
     const result = await projectService.getAll(filters)

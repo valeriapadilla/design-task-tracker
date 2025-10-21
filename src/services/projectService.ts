@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import type { Project} from '@/lib/types'
 import type { CreateProjectForm, UpdateProjectForm, ProjectQueryForm } from '@/lib/validations'
 import { PROJECT_STATUS } from '@/lib/utils/constants'
+import { fileService } from './fileService'
 
 export const projectService = {
   // Obtener todos los proyectos 
@@ -64,7 +65,12 @@ export const projectService = {
       .select()
       .single()
     
-    if (error) throw error
+    if (error) {
+      console.error('Error creating project:', error)
+      throw error
+    }
+    
+    console.log('Project created successfully:', data)
     return data
   },
 
@@ -120,6 +126,49 @@ export const projectService = {
     const { data, error } = await supabase
       .from('projects')
       .update({ status })
+      .eq('id', id)
+      .select()
+      .single()
+    
+    if (error) throw error
+    return data
+  },
+
+  // Agregar archivos a un proyecto
+  async addFiles(id: string, files: File[]): Promise<Project> {
+    const supabase = await createClient()
+    
+    const uploadedUrls = await fileService.uploadFiles(files, id)
+    
+    // Obtener proyecto actual
+    const project = await this.getById(id)
+    
+    const updatedFiles = [...project.files, ...uploadedUrls]
+    
+    const { data, error } = await supabase
+      .from('projects')
+      .update({ files: updatedFiles })
+      .eq('id', id)
+      .select()
+      .single()
+    
+    if (error) throw error
+    return data
+  },
+
+  // Eliminar archivos de un proyecto
+  async removeFiles(id: string, fileUrls: string[]): Promise<Project> {
+    const supabase = await createClient()
+    
+    await fileService.deleteFiles(fileUrls)
+    
+    const project = await this.getById(id)
+    
+    const updatedFiles = project.files.filter(file => !fileUrls.includes(file))
+    
+    const { data, error } = await supabase
+      .from('projects')
+      .update({ files: updatedFiles })
       .eq('id', id)
       .select()
       .single()
